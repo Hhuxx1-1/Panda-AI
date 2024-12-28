@@ -203,11 +203,11 @@ local function renderMap(x,y,z,p,s)
     if s == nil then 
         s = 0
     end 
-    Player:setPosition(0,x,y+12,z);
+    Player:setPosition(0,x,y+14,z);
     Player:SetCameraRotTransformTo(0, {x=0,y=180}, 1, 0.1);
     -- Chat:sendSystemMsg("Proggress "..math.floor(p*100).."%")
     if s == 0 then 
-        threadpool:wait(0.01);
+        threadpool:wait(0.1);
     end 
 end
 
@@ -288,61 +288,100 @@ end
 -- Create the maze in the world using an API
 function MAZE:Create(blockAPI, blockID, facing)
     local y = 7;
+    local h = 12;
     local dim = 2; -- dimension 
     local fullLength = getLength(self.structure);
     Chat:sendSystemMsg("Full Length : "..fullLength);
     for s, cell in ipairs(self.structure) do
         -- make the host render the map 
         local x , z = 2 + cell.x * (dim * 2.5), 2 + cell.z * (dim * 2.5);
-        renderMap(x+0.5,y+2,z+0.5,s/fullLength,math.fmod(s,3));
+        renderMap(x+0.5,y+3,z+0.5,s/fullLength,math.fmod(s,3));
         if cell.t == "wall" then
-            for wallhigh = 1 , 10 do 
+            for offsetx = -dim , dim do 
+                for offsetz = -dim , dim do
+                    blockAPI:placeBlock(blockID, x + offsetx, y + 1 , z + offsetz);
+                end 
+            end 
+            for offsetx = -dim , dim do 
+                for offsetz = -dim , dim do
+                    blockAPI:placeBlock(667, x + offsetx, y + 2 , z + offsetz);
+                end 
+            end 
+            for wallhigh = 3 , h , 1 do 
                 for offsetx = -dim , dim do 
                     for offsetz = -dim , dim do
                         blockAPI:placeBlock(blockID, x + offsetx, y + wallhigh, z + offsetz);
                     end 
                 end 
             end 
+            
         elseif cell.t == "Spath" then 
-            blockAPI:placeBlock(123, x, y, z, facing)
+            blockAPI:placeBlock(122, x, y, z, facing)
         elseif cell.t == "Epath" then 
-            blockAPI:placeBlock(8, x, y, z, facing)
+            blockAPI:placeBlock(122, x, y, z, facing)
         elseif cell.t == "Ppath" then 
-            blockAPI:placeBlock(687, x, y, z, facing)
+            blockAPI:placeBlock(122, x, y, z, facing)
         elseif cell.t == "room" then
             if math.fmod(s,10) == 0 then 
                 threadpool:wait(0.1);
             end 
             for offsetx = -dim , dim do 
                 for offsetz = -dim , dim do
-                    blockAPI:placeBlock(29, x + offsetx, y , z + offsetz);
+                    blockAPI:placeBlock(122, x + offsetx, y , z + offsetz);
                 end 
             end 
+            blockAPI:placeBlock(685, x , y - 1, z );
         elseif cell.t == "pathS" then
             for offsetx = -dim , dim do 
                 for offsetz = -dim , dim do
-                    blockAPI:placeBlock(233, x + offsetx, y , z + offsetz);
+                    blockAPI:placeBlock(122, x + offsetx, y , z + offsetz);
                 end 
             end 
+            blockAPI:placeBlock(963, x , y - 1, z );
         else
             if math.fmod(s,10) == 0 then 
                 threadpool:wait(0.1);
             end 
             for offsetx = -dim , dim do 
                 for offsetz = -dim , dim do
-                    blockAPI:placeBlock(667, x + offsetx, y , z + offsetz);
+                    blockAPI:placeBlock(122, x + offsetx, y , z + offsetz);
                 end 
             end 
+            blockAPI:placeBlock(685, x , y - 1, z );
         end
+        for offsetx = -dim , dim do 
+            for offsetz = -dim , dim do
+                blockAPI:placeBlock(1018, x + offsetx, y + h + 2 , z + offsetz);
+            end 
+        end 
     end
 end
 
 -- Example script to demonstrate usage
 ScriptSupportEvent:registerEvent("Game.Start", function()
+    local size = 64;
     local Maze1 = MAZE:NEW()
-    Maze1:Create2DMap({x = 0, z = 0}, {x = 64, z = 64}) -- Generate the maze
+    Maze1:Create2DMap({x = size*0, z = size*0}, {x = size*1, z = size*1}) -- Generate the maze
     Maze1:Ensort() -- Sort in a render able pattern
     Maze1:MarkRooms();
     Maze1:MPathS();
-    Maze1:Create(Block, 501, 1) -- Place the blocks
+    Maze1:Create(Block, 673, 1) -- Place the blocks
+    local Maze2 = MAZE:NEW()
+    Maze2:Create2DMap({x = size*0, z = size*1+3}, {x = size*1, z = size*2+3}) -- Generate the maze
+    Maze2:Ensort() -- Sort in a render able pattern
+    Maze2:MarkRooms();
+    Maze2:MPathS();
+    Maze2:Create(Block, 668, 1) -- Place the blocks
+    local Maze3 = MAZE:NEW()
+    Maze3:Create2DMap({x = size*1+3, z = size*0}, {x = size*2 + 2, z = size*1}) -- Generate the maze
+    Maze3:Ensort() -- Sort in a render able pattern
+    Maze3:MarkRooms();
+    Maze3:MPathS();
+    Maze3:Create(Block, 676, 1) -- Place the blocks
+    local Maze4 = MAZE:NEW()
+    Maze4:Create2DMap({x = size*1 + 3, z = size*1 + 3}, {x = size*2 + 3 , z = size*2 + 3 }) -- Generate the maze
+    Maze4:Ensort() -- Sort in a render able pattern
+    Maze4:MarkRooms();
+    Maze4:MPathS();
+    Maze4:Create(Block, 671, 1) -- Place the blocks
 end)
